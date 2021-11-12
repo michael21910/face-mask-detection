@@ -6,9 +6,9 @@ name_format = "withMask"
 
 num_correct = 0 
 
-_filename = name_format + "_filename.csv"
+_filename = f"./../src/{name_format}_filename.csv"
 
-img_dir = "./" + name_format + "/"
+img_dir = f"./../src/{name_format}Images/"
 
 def correct_name(filename):
     global name_format

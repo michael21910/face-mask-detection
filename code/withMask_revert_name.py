@@ -2,9 +2,9 @@ import pandas, os
 
 name_format = "withMask"
 
-img_dir = "./" + name_format + "/"
+img_dir = f"./../src/{name_format}Images/"
 
-filename = name_format + "_filename.csv"
+filename = f"./../src/{name_format}_filename.csv"
 
 if (os.path.isfile(filename)):
     
