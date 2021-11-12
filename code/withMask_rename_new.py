@@ -23,9 +23,35 @@ def should_rename(filename):
             return True
     return False
 
-filelist = [ name for name in os.listdir(img_dir) if should_rename(name) ]
-
 dictionary = { "newname" : [], "oldname" : [] }
+
+def save_to_csv():
+    global dictionary, _filename
+    if (os.path.isfile(_filename)):
+        pandas.DataFrame(dictionary).to_csv(_filename, mode = "a", header = False, index = False)
+    else:
+        pandas.DataFrame(dictionary).to_csv(_filename, header = True, index = False)
+
+def update_names():
+    global img_dir, _filename, dictionary
+    
+    nametracker = (
+        ([ name["newname"] for _, name in pandas.read_csv(_filename).iterrows() ])
+        if os.path.isfile(_filename) else []
+    )
+    
+    for name in [ name for name in os.listdir(img_dir) ]:
+        if correct_name(name) and not (name in nametracker):
+            dictionary["newname"].append(name)
+            dictionary["oldname"].append(f"not_{name}")
+            
+    save_to_csv()
+    
+    dictionary["newname"], dictionary["oldname"] = [], []
+
+update_names()
+
+filelist = [ name for name in os.listdir(img_dir) if should_rename(name) ]
 
 for index, name in enumerate(filelist):
     oldname, newname = name, name_format + str(num_correct + 1 + index) + name[-4:]
@@ -33,7 +59,4 @@ for index, name in enumerate(filelist):
     dictionary["oldname"].append(oldname)
     os.rename(img_dir + oldname, img_dir + newname)
 
-if (os.path.isfile(_filename)):
-    pandas.DataFrame(dictionary).to_csv(_filename, mode = "a", header = False, index = False)
-else:
-    pandas.DataFrame(dictionary).to_csv(_filename, header = True, index = False)
+save_to_csv()
