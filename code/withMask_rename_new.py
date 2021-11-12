@@ -12,7 +12,8 @@ img_dir = f"./../src/{name_format}Images/"
 
 def correct_name(filename):
     global name_format
-    return (name_format in filename)
+    s_len, t_len, f_len = len(filename), len(name_format), 4
+    return (((s_len - f_len) >= t_len) and (filename[:t_len] == name_format) and ((filename[t_len:s_len - f_len] == "") or (filename[t_len:s_len - f_len].isnumeric())))
 
 def should_rename(filename):
     global supported_images, num_correct
@@ -27,10 +28,8 @@ dictionary = { "newname" : [], "oldname" : [] }
 
 def save_to_csv():
     global dictionary, _filename
-    if (os.path.isfile(_filename)):
-        pandas.DataFrame(dictionary).to_csv(_filename, mode = "a", header = False, index = False)
-    else:
-        pandas.DataFrame(dictionary).to_csv(_filename, header = True, index = False)
+    FE = os.path.isfile(_filename)
+    pandas.DataFrame(dictionary).to_csv(_filename, index = False, header = not FE, mode = ("a" if FE else "w"))
 
 def update_names():
     global img_dir, _filename, dictionary
