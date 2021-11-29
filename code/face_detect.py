@@ -70,12 +70,22 @@ def main():
         for bounding_box in bounding_boxs:
             (x, y, w, h) = bounding_box["box"]
 
-            # draw the rectangle on the frame
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            # results could be different after implementing the mask detection
+            # the pseudo code are as follows:
+            # if the mask in on:
+            #      display "Mask On"
+            #      colors of the bounding box and the text will be green
+            # else:
+            #      display "Mask Off"
+            #      colors of the bounding box and the text will be red
+
+            # example: when mask in on
+            # draw the bounding box
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             
-            # display "No mask"
-            text = "No mask"
-            cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # display mask on or off message
+            text = "Mask On"
+            cv2.putText(frame, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         # show the frame
         cv2.imshow("Frame", frame)
