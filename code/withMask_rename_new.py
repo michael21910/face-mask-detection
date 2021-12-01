@@ -1,4 +1,4 @@
-import os, pandas 
+import os, pandas
 
 supported_images = [ ".jpg", ".png" ]
 
@@ -24,6 +24,8 @@ def should_rename(filename):
             return True
     return False
 
+dictionary = { "newname" : [], "oldname" : [] }
+
 def save_to_csv():
     global dictionary, _filename
     FE = os.path.isfile(_filename)
@@ -31,26 +33,24 @@ def save_to_csv():
 
 def update_names():
     global img_dir, _filename, dictionary
-
+    
     nametracker = (
         ([ name["newname"] for _, name in pandas.read_csv(_filename).iterrows() ])
         if os.path.isfile(_filename) else []
     )
-
+    
     for name in [ name for name in os.listdir(img_dir) ]:
         if correct_name(name) and not (name in nametracker):
             dictionary["newname"].append(name)
             dictionary["oldname"].append(f"not_{name}")
-
+            
     save_to_csv()
-
+    
     dictionary["newname"], dictionary["oldname"] = [], []
 
 update_names()
 
 filelist = [ name for name in os.listdir(img_dir) if should_rename(name) ]
-
-dictionary = { "newname" : [], "oldname" : [] }
 
 for index, name in enumerate(filelist):
     oldname, newname = name, name_format + str(num_correct + 1 + index) + name[-4:]
