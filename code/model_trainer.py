@@ -9,71 +9,119 @@ random.seed(datetime.now())
 
 class BasicData:
     
-    # Dimension of jpeg files: (300, 300) when dim = 300
+    
+    """
+    
+        The dimension of jpeg files: 
+            
+            (1080, 1080) when dim = 1080
+            ( 300,  300) when dim =  300
+            ( 160,  160) when dim =  160
+        
+    """
+    
     dim = 160
+    
+    
+    """
+    
+        The extension of neural network models.
+        
+    """
     
     modelExtension = ".h5"
 
 class Images(BasicData):
     
-    # Dimension of jpeg files: (300, 300) when dim = 300
-    #dim = 300
     
-    # Making sure batchScale is within [ 1e-10, 1.0 ]
-    # 1e-10 is an arbitrarily-small number which can be rounded up to 1 using math.ceil()
+    # This function confines batchScale to ( 0.0, 1.0 ]
+    
     def __check_scale(self, scale):
+        
+        
+        """
+            
+            To ensure that at least 1 file will be loaded when there are some files available,
+        we pick an arbitrarily-small number 1e-10 as the lower bound of batchScale instead of 0.
+        
+            => [ 1e-10, 1.0 ] ≈ ( 0.0, 1.0 ] 
+        
+        """
         
         return max(1e-10, min(scale, 1.0))
     
-    # This function is used to filter out all but jpeg files
+    
+    # This function identifies whether or not a file name is that of a jpeg one
+    
     def __is_jpeg(self, name):
         
         return ((name[-4:].lower() == ".jpg") or (name[-5:].lower() == ".jpeg"))
     
     def __init__(self, folderPath = "./", batchScale = 1.0, shuffle = False):
         
-        # A list of all jpeg files within the target folder will be created
+        
+        # The names of all jpeg files inside the folder are found and placed in a list
+        
         self.nameList = [ 
             folderPath + name for name in os.listdir(folderPath) \
                 if (self.__is_jpeg(name) and os.path.isfile(folderPath + name))
         ]
         
-        # Shuffling the list of jpeg file names
+            
+        # Shuffling the list containing the names of jpeg files
+        
         if (shuffle):
             random.shuffle(self.nameList)
         
-        # The total number of jpeg files in the folder 
-        #   The index where we should start next
+        
+        # The number of jpeg files found in the folder
+        #   An index pointing to the beginning of the next batch
+        
         self.total, self.pointer = len(self.nameList), 0
         
-        # The number of jpeg files to be loaded at a time
+        
+        # The maximum number of jpeg files to be loaded at a time
+        
         self.batch = math.ceil(self.total * self.__check_scale(batchScale))
         
     def load_images(self):
         
         self.imageList = []
         
-        # Stop loading jpeg files when the pointer has reached the end
+        
+        # No images will be loaded when the pointer has reached the end of the list
+        
         if (self.pointer < self.total):
             
-            # Loading jpeg file in grayscale and normalizing pixels from [0, 255] to [0, 1]
+            
+            # Loading jpeg files in grayscale mode and normalizing pixel data from [ 0, 255 ] to [ 0.0, 1.0 ]
+            
             self.imageList = [
                 cv2.imread(name, cv2.IMREAD_GRAYSCALE) / 255.0 \
                     for name in self.nameList[ self.pointer : self.pointer + self.batch ]
             ]
                 
-            # Converting a list of numpy arrays | (dim, dim) x n | to a numpy array | (n, dim, dim) |
+            
+            # Converting [ numpy.array([1]), numpy.array([2]) ] to numpy.array([ [1], [2] ])
+            
             self.imageList = numpy.stack(self.imageList, axis = 0)
                 
-            # Updating the pointer
+            
+            # Updating the pointer and bounding it within [ 0, self.total ]
+            
             self.pointer = min(self.pointer + self.batch, self.total)
         
-        # Saving the number of jpeg files within the current batch
+        
+        # Saving the number of images in the current batch
+        
         self.curBatch = len(self.imageList)
         
         return self.curBatch
   
 class Model(BasicData):
+    
+    
+    # This function will remove modelExtension from the filename if detected
     
     def __check_name(self, name):
         
@@ -116,13 +164,9 @@ class Model(BasicData):
         
 maskPath, facePath, modelName = "./mask/", "./face/", "./model/test_model.h5"
 
-runs, batchScale, shuffle = 10, 0.3, True
+runs, batchScale, shuffle = 10, 1 / 3.0, True
 
-batch_size, epochs, validation_split = 64, 10, 0.25
-
-mask = Images(folderPath = maskPath, batchScale = batchScale, shuffle = shuffle)
-
-face = Images(folderPath = facePath, batchScale = batchScale, shuffle = shuffle)
+batch_size, epochs, validation_split = 64, 10, 1 / 4.0
 
 layerList = [
     layers.Conv2D(filters = 16, kernel_size = (7, 7), activation = "relu"),
@@ -152,6 +196,10 @@ model.compile_model(show_summary = True, **{"optimizer" : "Adam", "loss" : "mse"
 time.sleep(20)
 
 for run in range(runs):
+    
+    mask = Images(folderPath = maskPath, batchScale = batchScale, shuffle = shuffle)
+    
+    face = Images(folderPath = facePath, batchScale = batchScale, shuffle = shuffle)
     
     while ((mask.load_images()) and (face.load_images())):
         
