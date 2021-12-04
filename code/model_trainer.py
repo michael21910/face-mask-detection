@@ -155,36 +155,57 @@ class Model(BasicData):
     
     def fit_model(self, imageList, labelList, ** kwargs):
         
-        self.model.fit(imageList, labelList, ** kwargs)
+        self.history = self.model.fit(imageList, labelList, ** kwargs)
         
     def save_model(self, meta):
         
         self.model.save(self.filename + meta + self.modelExtension)
         self.pointer += 1
+        self.__save_history(meta)
         
-maskPath, facePath, modelName = "./mask/", "./face/", "./model/test_model.h5"
+    def __save_history(self, meta):
+        
+        pyplot.plot(self.history.history["loss"])
+        
+        pyplot.plot(self.history.history["val_loss"])
+        
+        pyplot.legend(["loss", "val_loss"])
+        
+        pyplot.savefig(self.filename + meta + "_lossFig.png")
+        
+        pyplot.show()
+        
+        pyplot.plot(self.history.history["Accuracy"])
+        
+        pyplot.plot(self.history.history["val_Accuracy"])
+        
+        pyplot.legend(["acc", "val_acc"])
+        
+        pyplot.savefig(self.filename + meta + "_valFig.png")
+        
+        pyplot.show()
+        
+maskPath, facePath, modelName = "./../160x160/withMask/one/", "./../160x160/noMask/zero/", "./../mask_class_model/test_model_r.h5"
 
-runs, batchScale, shuffle = 10, 1 / 3.0, True
+runs, batchScale, shuffle = 1, 1.0, True
 
-batch_size, epochs, validation_split = 64, 10, 1 / 4.0
+batch_size, epochs, validation_split = 64, 50, (1 / 6.0)
 
 layerList = [
-    layers.Conv2D(filters = 16, kernel_size = (7, 7), activation = "relu"),
-    layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
-    layers.Conv2D(filters = 32, kernel_size = (5, 5), activation = "relu"),
-    layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
-    layers.Conv2D(filters = 64, kernel_size = (5, 5), activation = "relu"),
-    layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
-    layers.Conv2D(filters = 128, kernel_size = (3, 3), activation = "relu"),
-    layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
-    layers.Conv2D(filters = 256, kernel_size = (3, 3), activation = "relu"),
-    layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
-    layers.Flatten(),
-    layers.Dense(512, activation = "relu"),
-    layers.Dropout(0.2),
-    layers.Dense(32, activation = "relu"),
-    layers.Dropout(0.2),
-    layers.Dense(1, activation = "sigmoid")
+  layers.MaxPooling2D(pool_size = (4, 4), padding = "same"),
+  layers.Conv2D(filters = 32, kernel_size = (3, 3), activation = "relu"),
+  layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
+  layers.Conv2D(filters = 64, kernel_size = (3, 3), activation = "relu"),
+  layers.MaxPooling2D(pool_size = (2, 2), padding = "same"),
+  layers.Flatten(),
+  #layers.Dense(512, activation = "relu"),
+  layers.Dense(128, activation = "relu"),
+  layers.Dropout(0.5),
+  layers.Dense(64, activation = "relu"),
+  layers.Dropout(0.3),
+  layers.Dense(32, activation = "relu"),
+  layers.Dropout(0.4),
+  layers.Dense(1, activation = "sigmoid")
 ]
 
 model = Model(filename = modelName)
@@ -193,7 +214,7 @@ model.add_layers(layerList)
 
 model.compile_model(show_summary = True, **{"optimizer" : "Adam", "loss" : "mse", "metrics" : [ "Accuracy" ]})
 
-time.sleep(20)
+#time.sleep(20)
 
 for run in range(runs):
     
@@ -212,7 +233,7 @@ for run in range(runs):
             epochs = epochs,
             validation_split = validation_split,
             shuffle = shuffle,
-            callbacks = [ callbacks.EarlyStopping(monitor = "val_loss", patience = 3, verbose = 0) ]
+            callbacks = [ callbacks.EarlyStopping(monitor = "val_Accuracy", patience = 50, verbose = 0) ]
         )
         
         model.save_model(f"_{run}_{model.pointer}")
