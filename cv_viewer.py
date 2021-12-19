@@ -5,18 +5,13 @@ from os.path import exists
 from urllib.request import urlretrieve
 from tensorflow.keras import models
 import h5py
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-absolutePath = "C:/Users/ailab/Desktop/project/ML-maskDetectionProject/"
+# change your path here
+absolutePath = "C:/Path/Here"
 
 # download model if not exists
-prototxt = absolutePath + "face-mask-detection/code/deploy.prototxt"
-caffemodel = absolutePath + "face-mask-detection/code/res10_300x300_ssd_iter_140000.caffemodel"
-
-if not exists(prototxt) or not exists(caffemodel):
-    urlretrieve(f"https://raw.githubusercontent.com/opencv/opencv/master/samples/dnn/face_detector/{prototxt}", prototxt)
-    urlretrieve(f"https://raw.githubusercontent.com/opencv/opencv_3rdparty/dnn_samples_face_detector_20170830/{caffemodel}", caffemodel)
+prototxt = absolutePath + "face-mask-detection/deploy.prototxt"
+caffemodel = absolutePath + "face-mask-detection/res10_300x300_ssd_iter_140000.caffemodel"
 
 # initialize model
 net = cv2.dnn.readNetFromCaffe(prototxt=prototxt, caffeModel=caffemodel)
@@ -58,7 +53,7 @@ def detect(img, min_confidence = 0.6):
 
     return bounding_boxs
 
-modelPath = "./model/face_mask_detection.hdf5"
+modelPath = "./Model/face_mask_detection.hdf5"
 
 model = models.load_model(modelPath)
 
@@ -122,5 +117,6 @@ def main():
             break
     
     cv2.destroyAllWindows()
+
 if __name__ == '__main__':
     main()
